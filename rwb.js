@@ -97,7 +97,7 @@ function ViewShift()
 
   color.innerHTML="<b><blink>Querying...("+ne.lat()+","+ne.lng()+") to ("+sw.lat()+","+sw.lng()+")</blink></b>";
   color.style.backgroundColor='white';
-  if(committees.checked && individuals.checked && candidates.checked && opinions.checked){
+  if(committees.checked && individuals.checked && candidates.checked && opinions.checked || !committees.checked && !individuals.checked && !candidates.checked && !opinions.checked){
         // debug status flows through by cookie
         $.get("rwb.pl?act=near&latne="+ne.lat()+"&longne="+ne.lng()+"&latsw="+sw.lat()+"&longsw="+sw.lng()+"&format=raw&what=all", NewData);
 
