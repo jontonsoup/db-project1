@@ -488,18 +488,46 @@ if ($debug) {
        }
      }
 
-
      if ($action eq "invite-user") {
-      print h2("Invite User Functionality Is Unimplemented");
-    }
+      print "Invite User";
+      print start_form(-name=>'invite'),p,p,
+      "Email: ", textfield(-name=>'email'),p,
+      hidden(-name=>'run',default=>['1']),
+      hidden(-name=>'act',default=>['invite-user']),
+      submit,
+      end_form;
+      if (defined(param("email"))) {
+        my $random_number = rand();
+        eval { ExecSQL($dbuser,$dbpasswd,
+          "insert into rwb_invites (nonce) values (?)",undef, $random_number);};
 
-    if ($action eq "give-opinion-data") {
-      print h2("Giving Location Opinion Data Is Unimplemented");
-    }
 
-    if ($action eq "give-cs-ind-data") {
-      print h2("Giving Crowd-sourced Individual Geolocations Is Unimplemented");
-    }
+        my $email = param("email");
+
+        use Net::SMTP;
+        my $smtp = Net::SMTP->new('localhost');
+
+        $smtp->mail($ENV{USER});
+        $smtp->to($email);
+
+        $smtp->data();
+        $smtp->datasend("To: " . $email . "\n");
+        $smtp->datasend("\n");
+        $smtp->datasend("http://". $ENV{'HTTP_HOST'} ."/~jmf716/rwb/rwb.pl?act=add-user&n=$random_number&ref=$user");
+        $smtp->dataend();
+        print $email . " has been sent an email request";
+        } else{
+          print "You must have an email";
+        }
+      }
+
+      if ($action eq "give-opinion-data") {
+        print h2("Giving Location Opinion Data Is Unimplemented");
+      }
+
+      if ($action eq "give-cs-ind-data") {
+        print h2("Giving Crowd-sourced Individual Geolocations Is Unimplemented");
+      }
 
 #
 # ADD-USER
@@ -510,38 +538,73 @@ if ($debug) {
 #
 #
 if ($action eq "add-user") {
-  if (!UserCan($user,"add-users") && !UserCan($user,"manage-users")) {
-    print h2('You do not have the required permissions to add users.');
-    } else {
-      if (!$run) {
-        print start_form(-name=>'AddUser'),
-        h2('Add User'),
-        "Name: ", textfield(-name=>'name'),
-        p,
-        "Email: ", textfield(-name=>'email'),
-        p,
-        "Password: ", textfield(-name=>'password'),
-        p,
-        hidden(-name=>'run',-default=>['1']),
-        hidden(-name=>'act',-default=>['add-user']),
-        submit,
-        end_form,
-        hr;
-        } else {
-          my $name=param('name');
-          my $email=param('email');
-          my $password=param('password');
-          my $error;
-          $error=UserAdd($name,$password,$email,$user);
-          if ($error) {
-           print "Can't add user because: $error";
-           } else {
-             print "Added user $name $email as referred by $user\n";
+  # if (!UserCan($user,"add-users") && !UserCan($user,"manage-users")) {
+
+  #   print h2('You do not have the required permissions to add users.');
+  #   } else {
+    if(defined(param("n"))){
+      my @rows;
+      my $nonce = param("n");
+      eval { @rows = ExecSQL($dbuser, $dbpasswd, "select nonce from rwb_invites WHERE nonce='$nonce'", "COL"); };
+      print @rows;
+        #check to see if the query is successful
+        if (scalar(@rows) == 0){
+          #yell at the user!
+          print h2('You do not have the required permissions to add users.');
+          } else {
+            #delete the link
+            my @return;
+            eval { @return = ExecSQL($dbuser, $dbpasswd, "delete from rwb_invites WHERE nonce='$nonce'", undef); };
+            if (!$run) {
+              print start_form(-name=>'AddUser', -action=>'/~jmf716/rwb/rwb.pl?act=add-user'),
+              h2('Add User ref'),
+              "Name: ", textfield(-name=>'name'),
+              p,
+              "Email: ", textfield(-name=>'email'),
+              p,
+              "Password: ", textfield(-name=>'password'),
+              p,
+              hidden(-name=>'run',-default=>['1']),
+              hidden(-name=>'ref',-default=>[param('ref')]),
+              hidden(-name=>'act',-default=>['add-user']),
+              submit,
+              end_form,
+              hr;
+            }
+          }
+          } else {
+            if (!$run) {
+              print start_form(-name=>'AddUser'),
+              h2('Add User'),
+              "Name: ", textfield(-name=>'name'),
+              p,
+              "Email: ", textfield(-name=>'email'),
+              p,
+              "Password: ", textfield(-name=>'password'),
+              p,
+              hidden(-name=>'run',-default=>['1']),
+              hidden(-name=>'act',-default=>['add-user']),
+              hidden(-name=>'ref',-default=>[$user]),
+              submit,
+              end_form,
+              hr;
+              } else {
+                my $name=param('name');
+                my $email=param('email');
+                my $password=param('password');
+                my $error;
+                my $ref = param('ref');
+                $error=UserAdd($name,$password,$email,$ref);
+                if ($error) {
+                 print "Can't add user because: $error";
+                 } else {
+                   print "Added user $name $email as referred by $ref\n";
+                 }
+               }
+             }
+             # }
+             print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
            }
-         }
-       }
-       print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
-     }
 
      #
      # DELETE-USER
@@ -730,10 +793,10 @@ sub Committees {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
   my @rows;
   eval {
-    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip 
-                                              from cs339.committee_master 
-                                              natural join cs339.cmte_id_to_geo 
-                                              where cycle=? and latitude>? and latitude<? and longitude>? and longitude<?",undef,$cycle,$latsw,$latne,$longsw,$longne);
+    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip
+      from cs339.committee_master
+      natural join cs339.cmte_id_to_geo
+      where cycle=? and latitude>? and latitude<? and longitude>? and longitude<?",undef,$cycle,$latsw,$latne,$longsw,$longne);
   };
 
   if ($@) {
