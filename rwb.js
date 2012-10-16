@@ -86,6 +86,19 @@ function NewData(data)
 
 }
 
+// when called, returns which cycles are selected in an array
+function SelectedCycles() {
+  var Cycles = document.getElementById('cycles');
+  var x = 0;
+  var arr = [];
+  for (x=0;x<Cycles.options.length;x++) {
+    if (Cycles.options[x].selected == true) {
+      arr.push(Cycles.options[x].value);
+    }
+  }
+  return arr;
+}
+
 function ViewShift()
 {
   var bounds = map.getBounds();
@@ -95,11 +108,25 @@ function ViewShift()
 
   var color = document.getElementById("color");
 
+  var selected_cycles = SelectedCycles();
+  var selected_cycles_param = selected_cycles.toString();
+
+  // if (selected_cycles.length == 0) {
+  //   selected_cycles_param = "";
+  // }
+  // else {
+  //   selected_cycles_param = String(selected_cycles);
+  // }
+
   color.innerHTML="<b><blink>Querying...("+ne.lat()+","+ne.lng()+") to ("+sw.lat()+","+sw.lng()+")</blink></b>";
   color.style.backgroundColor='white';
   if(committees.checked && individuals.checked && candidates.checked && opinions.checked || !committees.checked && !individuals.checked && !candidates.checked && !opinions.checked){
         // debug status flows through by cookie
-        $.get("rwb.pl?act=near&latne="+ne.lat()+"&longne="+ne.lng()+"&latsw="+sw.lat()+"&longsw="+sw.lng()+"&format=raw&what=all", NewData);
+        var query_string = "rwb.pl?act=near&latne="+ne.lat()+"&longne="+ne.lng()+"&latsw="+sw.lat()+"&longsw="+sw.lng();
+        query_string = query_string +  "&cycle=" + selected_cycles_param;
+        query_string = query_string + "&format=raw&what=all";
+        
+        $.get(query_string, NewData);
 
       }
       else{
@@ -118,7 +145,10 @@ function ViewShift()
           what_array.push("opinions");
         }
         what_sting = what_array.join(',');
-        var query_string = "rwb.pl?act=near&latne="+ne.lat()+"&longne="+ne.lng()+"&latsw="+sw.lat()+"&longsw="+sw.lng()+"&format=raw&what=" + what_sting;
+        var query_string = "rwb.pl?act=near&latne="+ne.lat()+"&longne="+ne.lng()+"&latsw="+sw.lat()+"&longsw="+sw.lng();
+        query_string += "&cycle=" + selected_cycles_param;
+        query_string += "&format=raw&what=" + what_sting;
+        alert(query_string);
         $.get(query_string, NewData);
       }
 
