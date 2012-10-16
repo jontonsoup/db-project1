@@ -345,14 +345,18 @@ if ($action eq "base") {
   #
   print "<div id=\"map\" style=\"width:100\%; height:80\%\"></div>";
 
+
+  my @rows;
+  eval { @rows = ExecSQL($dbuser, $dbpasswd, "select unique cycle from cs339.committee_master", "COL"); };
+
   print start_form(-name=>'selections'),
-  checkbox(-name=>'Committees', -id=>'committees'),p,
-  checkbox(-name=>'Individuals', -id=>'individuals'),p,
-  checkbox(-name=>'Candidates', -id=>'candidates'),p,
-  checkbox(-name=>'Opinions', -id=>'opinions'),p,
+  checkbox(-name=>'Committees', -id=>'committees', -checked=>'true'),p,
+  checkbox(-name=>'Individuals', -id=>'individuals', -checked=>'true'),p,
+  checkbox(-name=>'Candidates', -id=>'candidates', -checked=>'true'),p,
+  checkbox(-name=>'Opinions', -id=>'opinions', -checked=>'true'),p,
   popup_menu(-name=>'',
     -multiple=>'true',
-    -values=>['1010'],
+    -values=>[@rows],
     -default=>'1010'),p,
   end_form;
 
@@ -714,6 +718,7 @@ if ($action eq "add-user") {
             # The main line is finished at this point.
             # The remainder includes utilty and other functions
             #
+
 
 
 #
