@@ -348,14 +348,12 @@ if ($action eq "base") {
 
   my @rows;
   eval { @rows = ExecSQL($dbuser, $dbpasswd, "select unique cycle from cs339.committee_master", "COL"); };
-  use Data::Dumper;
-  print Dumper(@rows);
 
   print start_form(-name=>'selections'),
-  checkbox(-name=>'Committees', -id=>'committees'),p,
-  checkbox(-name=>'Individuals', -id=>'individuals'),p,
-  checkbox(-name=>'Candidates', -id=>'candidates'),p,
-  checkbox(-name=>'Opinions', -id=>'opinions'),p,
+  checkbox(-name=>'Committees', -id=>'committees', -checked=>'true'),p,
+  checkbox(-name=>'Individuals', -id=>'individuals', -checked=>'true'),p,
+  checkbox(-name=>'Candidates', -id=>'candidates', -checked=>'true'),p,
+  checkbox(-name=>'Opinions', -id=>'opinions', -checked=>'true'),p,
   popup_menu(-name=>'',
     -multiple=>'true',
     -values=>[@rows],
