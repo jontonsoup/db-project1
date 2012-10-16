@@ -233,8 +233,8 @@ if (defined(param("act"))) {
                   my $cookie=cookie(-name=>$cookiename,
                     -value=>$outputcookiecontent,
                     -expires=>($deletecookie ? '-1h' : '+1h'));
-push @outputcookies, $cookie;
-}
+                  push @outputcookies, $cookie;
+                }
 #
 # We also send back a debug cookie
 #
@@ -242,7 +242,7 @@ push @outputcookies, $cookie;
 if (defined($outputdebugcookiecontent)) {
   my $cookie=cookie(-name=>$debugcookiename,
     -value=>$outputdebugcookiecontent);
-push @outputcookies, $cookie;
+  push @outputcookies, $cookie;
 }
 
 #
@@ -354,7 +354,7 @@ if ($action eq "base") {
     -multiple=>'true',
     -values=>['1010'],
     -default=>'1010'),p,
-end_form;
+  end_form;
 
 #
 # And a div to populate with info about nearby stuff
@@ -437,65 +437,65 @@ if ($debug) {
        candidates => 1,
        individuals =>1,
        opinions => 1);
-} else {
-  map {$what{$_}=1} split(/\s*,\s*/,$whatparam);
-}
+      } else {
+        map {$what{$_}=1} split(/\s*,\s*/,$whatparam);
+      }
 
 
-if ($what{committees}) {
-  my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycle,$format);
-  if (!$error) {
-    if ($format eq "table") {
-     print "<h2>Nearby committees</h2>$str";
-     } else {
-       print $str;
+      if ($what{committees}) {
+        my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycle,$format);
+        if (!$error) {
+          if ($format eq "table") {
+           print "<h2>Nearby committees</h2>$str";
+           } else {
+             print $str;
+           }
+         }
+       }
+       if ($what{candidates}) {
+        my ($str,$error) = Candidates($latne,$longne,$latsw,$longsw,$cycle,$format);
+        if (!$error) {
+          if ($format eq "table") {
+           print "<h2>Nearby candidates</h2>$str";
+           } else {
+             print $str;
+           }
+         }
+       }
+       if ($what{individuals}) {
+        my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycle,$format);
+        if (!$error) {
+          if ($format eq "table") {
+           print "<h2>Nearby individuals</h2>$str";
+           } else {
+             print $str;
+           }
+         }
+       }
+       if ($what{opinions}) {
+        my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycle,$format);
+        if (!$error) {
+          if ($format eq "table") {
+           print "<h2>Nearby opinions</h2>$str";
+           } else {
+             print $str;
+           }
+         }
+       }
      }
-   }
- }
- if ($what{candidates}) {
-  my ($str,$error) = Candidates($latne,$longne,$latsw,$longsw,$cycle,$format);
-  if (!$error) {
-    if ($format eq "table") {
-     print "<h2>Nearby candidates</h2>$str";
-     } else {
-       print $str;
-     }
-   }
- }
- if ($what{individuals}) {
-  my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycle,$format);
-  if (!$error) {
-    if ($format eq "table") {
-     print "<h2>Nearby individuals</h2>$str";
-     } else {
-       print $str;
-     }
-   }
- }
- if ($what{opinions}) {
-  my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycle,$format);
-  if (!$error) {
-    if ($format eq "table") {
-     print "<h2>Nearby opinions</h2>$str";
-     } else {
-       print $str;
-     }
-   }
- }
-}
 
 
-if ($action eq "invite-user") {
-  print h2("Invite User Functionality Is Unimplemented");
-}
+     if ($action eq "invite-user") {
+      print h2("Invite User Functionality Is Unimplemented");
+    }
 
-if ($action eq "give-opinion-data") {
-  print h2("Giving Location Opinion Data Is Unimplemented");
-}
+    if ($action eq "give-opinion-data") {
+      print h2("Giving Location Opinion Data Is Unimplemented");
+    }
 
-if ($action eq "give-cs-ind-data") {
-  print h2("Giving Crowd-sourced Individual Geolocations Is Unimplemented");
-}
+    if ($action eq "give-cs-ind-data") {
+      print h2("Giving Crowd-sourced Individual Geolocations Is Unimplemented");
+    }
 
 #
 # ADD-USER
@@ -716,30 +716,33 @@ if ($action eq "add-user") {
             #
 
 
-            #
-            # Generate a table of nearby committees
-            # ($table|$raw,$error) = Committees(latne,longne,latsw,longsw,cycle,format)
-            # $error false on success, error string on failure
-            #
-            sub Committees {
-              my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
-              my @rows;
-              eval {
-                @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip from cs339.committee_master natural join cs339.cmte_id_to_geo where cycle=? and latitude>? and latitude<? and longitude>? and longitude<?",undef,$cycle,$latsw,$latne,$longsw,$longne);
-              };
+#
+# Generate a table of nearby committees
+# ($table|$raw,$error) = Committees(latne,longne,latsw,longsw,cycle,format)
+# $error false on success, error string on failure
+#
+sub Committees {
+  my ($latne,$longne,$latsw,$longsw,$cycle,$format) = @_;
+  my @rows;
+  eval {
+    @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip 
+                                              from cs339.committee_master 
+                                              natural join cs339.cmte_id_to_geo 
+                                              where cycle=? and latitude>? and latitude<? and longitude>? and longitude<?",undef,$cycle,$latsw,$latne,$longsw,$longne);
+  };
 
-              if ($@) {
-                return (undef,$@);
-                } else {
-                  if ($format eq "table") {
-                    return (MakeTable("committee_data","2D",
-                     ["latitude", "longitude", "name", "party", "street1", "street2", "city", "state", "zip"],
-                     @rows),$@);
-} else {
-  return (MakeRaw("committee_data","2D",@rows),$@);
-}
-}
-}
+  if ($@) {
+    return (undef,$@);
+    } else {
+      if ($format eq "table") {
+        return (MakeTable("committee_data","2D",
+         ["latitude", "longitude", "name", "party", "street1", "street2", "city", "state", "zip"],
+         @rows),$@);
+        } else {
+          return (MakeRaw("committee_data","2D",@rows),$@);
+        }
+      }
+    }
 
 
 #
@@ -761,11 +764,11 @@ sub Candidates {
         return (MakeTable("candidate_data", "2D",
          ["latitude", "longitude", "name", "party", "street1", "street2", "city", "state", "zip"],
          @rows),$@);
-} else {
-  return (MakeRaw("candidate_data","2D",@rows),$@);
-}
-}
-}
+        } else {
+          return (MakeRaw("candidate_data","2D",@rows),$@);
+        }
+      }
+    }
 
 
 #
@@ -790,11 +793,11 @@ sub Individuals {
         return (MakeTable("individual_data", "2D",
          ["latitude", "longitude", "name", "city", "state", "zip", "employer", "amount"],
          @rows),$@);
-} else {
-  return (MakeRaw("individual_data","2D",@rows),$@);
-}
-}
-}
+        } else {
+          return (MakeRaw("individual_data","2D",@rows),$@);
+        }
+      }
+    }
 
 
 #
@@ -817,11 +820,11 @@ sub Opinions {
         return (MakeTable("opinion_data","2D",
          ["latitude", "longitude", "name", "city", "state", "zip", "employer", "amount"],
          @rows),$@);
-} else {
-  return (MakeRaw("opinion_data","2D",@rows),$@);
-}
-}
-}
+        } else {
+          return (MakeRaw("opinion_data","2D",@rows),$@);
+        }
+      }
+    }
 
 
 #
@@ -839,8 +842,8 @@ sub PermTable {
         "2D",
         ["Perm"],
         @rows),$@);
-}
-}
+    }
+  }
 
 #
 # Generate a table of users
@@ -857,8 +860,8 @@ sub UserTable {
         "2D",
         ["Name", "Email"],
         @rows),$@);
-}
-}
+    }
+  }
 
 #
 # Generate a table of users and their permissions
@@ -875,8 +878,8 @@ sub UserPermTable {
         "2D",
         ["Name", "Permission"],
         @rows),$@);
-}
-}
+    }
+  }
 
 #
 # Add a user
@@ -889,7 +892,7 @@ sub UserPermTable {
 sub UserAdd {
   eval { ExecSQL($dbuser,$dbpasswd,
    "insert into rwb_users (name,password,email,referer) values (?,?,?,?)",undef,@_);};
-return $@;
+  return $@;
 }
 
 #
@@ -912,7 +915,7 @@ sub UserDel {
 sub GiveUserPerm {
   eval { ExecSQL($dbuser,$dbpasswd,
    "insert into rwb_permissions (name,action) values (?,?)",undef,@_);};
-return $@;
+  return $@;
 }
 
 #
@@ -925,7 +928,7 @@ return $@;
 sub RevokeUserPerm {
   eval { ExecSQL($dbuser,$dbpasswd,
    "delete from rwb_permissions where name=? and action=?",undef,@_);};
-return $@;
+  return $@;
 }
 
 #
