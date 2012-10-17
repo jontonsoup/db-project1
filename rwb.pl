@@ -349,11 +349,12 @@ if ($action eq "base") {
   my @rows;
   eval { @rows = ExecSQL($dbuser, $dbpasswd, "select unique cycle from cs339.committee_master", "COL"); };
 
-  print start_form(-name=>'selections'),
+  print start_form(-name=>'selections'),h3("Select data"),
   checkbox(-name=>'Committees', -id=>'committees', -checked=>'true'),p,
   checkbox(-name=>'Individuals', -id=>'individuals', -checked=>'true'),p,
   checkbox(-name=>'Candidates', -id=>'candidates', -checked=>'true'),p,
   checkbox(-name=>'Opinions', -id=>'opinions', -checked=>'true'),p,
+  h3("Select Cycles"),
   popup_menu(-name=>'',
     -multiple=>'true',
     -values=>[@rows],
@@ -490,10 +491,19 @@ if ($debug) {
 
      if ($action eq "invite-user") {
       print "Invite User";
+
+
+      my @rows;
+      eval { @rows = ExecSQL($dbuser, $dbpasswd, "select action from RWB_PERMISSIONS where name='$user'", "COL"); };
+
       print start_form(-name=>'invite'),p,p,
       "Email: ", textfield(-name=>'email'),p,
       hidden(-name=>'run',default=>['1']),
-      hidden(-name=>'act',default=>['invite-user']),
+      hidden(-name=>'act',default=>['invite-user']),h3("select permissions"),
+      popup_menu(-name=>'',
+        -multiple=>'true',
+        -values=>[@rows]
+        ),p,
       submit,
       end_form;
       if (defined(param("email"))) {
@@ -501,6 +511,7 @@ if ($debug) {
         eval { ExecSQL($dbuser,$dbpasswd,
           "insert into rwb_invites (nonce) values (?)",undef, $random_number);};
 
+        my $permissions = join(',', @rows);
 
         my $email = param("email");
 
@@ -513,7 +524,7 @@ if ($debug) {
         $smtp->data();
         $smtp->datasend("To: " . $email . "\n");
         $smtp->datasend("\n");
-        $smtp->datasend("http://". $ENV{'HTTP_HOST'} ."/~jmf716/rwb/rwb.pl?act=add-user&n=$random_number&ref=$user");
+        $smtp->datasend("http://". $ENV{'HTTP_HOST'} ."/~jmf716/rwb/rwb.pl?act=add-user&n=$random_number&ref=$user&perm=$permissions");
         $smtp->dataend();
         print $email . " has been sent an email request";
         } else{
@@ -556,6 +567,8 @@ if ($action eq "add-user") {
             my @return;
             eval { @return = ExecSQL($dbuser, $dbpasswd, "delete from rwb_invites WHERE nonce='$nonce'", undef); };
             if (!$run) {
+
+
               print start_form(-name=>'AddUser', -action=>'/~jmf716/rwb/rwb.pl?act=add-user'),
               h2('Add User ref'),
               "Name: ", textfield(-name=>'name'),
@@ -567,6 +580,7 @@ if ($action eq "add-user") {
               hidden(-name=>'run',-default=>['1']),
               hidden(-name=>'ref',-default=>[param('ref')]),
               hidden(-name=>'act',-default=>['add-user']),
+              hidden(-name=>'perm',-default=>[param('perm')]),
               submit,
               end_form,
               hr;
@@ -574,34 +588,45 @@ if ($action eq "add-user") {
           }
           } else {
             if (!$run) {
-              print start_form(-name=>'AddUser'),
-              h2('Add User'),
-              "Name: ", textfield(-name=>'name'),
-              p,
-              "Email: ", textfield(-name=>'email'),
-              p,
-              "Password: ", textfield(-name=>'password'),
-              p,
-              hidden(-name=>'run',-default=>['1']),
-              hidden(-name=>'act',-default=>['add-user']),
-              hidden(-name=>'ref',-default=>[$user]),
-              submit,
-              end_form,
-              hr;
-              } else {
-                my $name=param('name');
-                my $email=param('email');
-                my $password=param('password');
-                my $error;
-                my $ref = param('ref');
-                $error=UserAdd($name,$password,$email,$ref);
-                if ($error) {
-                 print "Can't add user because: $error";
-                 } else {
-                   print "Added user $name $email as referred by $ref\n";
-                 }
+             my @rows;
+             eval { @rows = ExecSQL($dbuser, $dbpasswd, "select action from RWB_PERMISSIONS where name='$user'", "COL"); };
+
+             print start_form(-name=>'AddUser'),
+             h2('Add User'),
+             "Name: ", textfield(-name=>'name'),
+             p,
+             "Email: ", textfield(-name=>'email'),
+             p,
+             "Password: ", textfield(-name=>'password'),
+             p,
+             hidden(-name=>'run',-default=>['1']),
+             hidden(-name=>'act',-default=>['add-user']),
+             hidden(-name=>'ref',-default=>[$user]),
+             popup_menu(-name=>'perm',
+              -multiple=>'true',
+              -values=>[@rows]),p,
+             submit,
+             end_form,
+             hr;
+             } else {
+              my @perms = split(/,/, param('perm'));
+              my $name=param('name');
+              my $email=param('email');
+              my $password=param('password');
+              my $error;
+              my $ref = param('ref');
+              $error=UserAdd($name,$password,$email,$ref);
+              foreach(@perms){
+                GiveUserPerm($name,$_);
+              }
+
+              if ($error) {
+               print "Can't add user because: $error";
+               } else {
+                 print "Added user $name $email as referred by $ref\n";
                }
              }
+           }
              # }
              print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
            }
