@@ -349,12 +349,14 @@ if ($action eq "base") {
   my @rows;
   eval { @rows = ExecSQL($dbuser, $dbpasswd, "select unique cycle from cs339.committee_master", "COL"); };
 
-  print start_form(-name=>'selections'),
+  print start_form(-name=>'selections'),h3("Select data"),
   checkbox(-name=>'Committees', -id=>'committees', -checked=>'true'),p,
   checkbox(-name=>'Individuals', -id=>'individuals', -checked=>'true'),p,
   checkbox(-name=>'Candidates', -id=>'candidates', -checked=>'true'),p,
   checkbox(-name=>'Opinions', -id=>'opinions', -checked=>'true'),p,
-  popup_menu(-name=>'Cycles',
+
+  h3("Select Cycles"),
+    popup_menu(-name=>'Cycles',
     -id=>'cycles',
     -multiple=>'true',
     -values=>[@rows],
@@ -508,18 +510,87 @@ sub apply (&@) {                  # takes code block `&` and list `@`
        }
      }
 
-
      if ($action eq "invite-user") {
-      print h2("Invite User Functionality Is Unimplemented");
-    }
+      print "Invite User";
 
-    if ($action eq "give-opinion-data") {
-      print h2("Giving Location Opinion Data Is Unimplemented");
-    }
 
-    if ($action eq "give-cs-ind-data") {
-      print h2("Giving Crowd-sourced Individual Geolocations Is Unimplemented");
-    }
+      my @rows;
+      eval { @rows = ExecSQL($dbuser, $dbpasswd, "select action from RWB_PERMISSIONS where name='$user'", "COL"); };
+
+      print start_form(-name=>'invite'),p,p,
+      "Email: ", textfield(-name=>'email'),p,
+      hidden(-name=>'run',default=>['1']),
+      hidden(-name=>'act',default=>['invite-user']),h3("select permissions"),
+      popup_menu(-name=>'perms',
+        -multiple=>'true',
+        -values=>[@rows]
+        ),p,
+      submit,
+      end_form;
+      if (defined(param("email"))) {
+        my $random_number = rand();
+        eval { ExecSQL($dbuser,$dbpasswd,
+          "insert into rwb_invites (nonce) values (?)",undef, $random_number);};
+
+        my $permissions = join(',', param('perms'));
+
+        my $email = param("email");
+
+        use Net::SMTP;
+        my $smtp = Net::SMTP->new('localhost');
+
+        $smtp->mail($ENV{USER});
+        $smtp->to($email);
+
+        $smtp->data();
+        $smtp->datasend("To: " . $email . "\n");
+        $smtp->datasend("\n");
+        $smtp->datasend("http://". $ENV{'HTTP_HOST'} ."/~jmf716/rwb/rwb.pl?act=add-user&n=$random_number&ref=$user&perm=$permissions");
+        $smtp->dataend();
+        print $email . " has been sent an email request";
+        } else{
+          print "You must have an email";
+        }
+      }
+#
+#
+#
+# give opinion data
+#
+#
+#
+#
+#
+#
+if ($action eq "give-opinion-data") {
+   print "<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js\" type=\"text/javascript\"></script>";
+   print "<script type=\"text/javascript\" src=\"custom.js\"></script>";
+
+  if(defined(param('color'))){
+    my $color = param('color');
+    my $lat = param('lat');
+    my $long = param('long');
+           eval { ExecSQL($dbuser,$dbpasswd, "insert into rwb_opinions (submitter, color, latitude, longitude) values ('$user', '$color', '$lat', '$long' )",undef);};
+           print "Thanks for submitting your opinion!";
+        }
+        else {
+          print start_form(-name=>'color'),p,p,
+          h2("Select color (political affiliation) for current location"),
+          popup_menu(-name=>'color',
+            -values=>['-1', '1', '0'],
+            -labels=>{'1' => 'Blue','-1' => 'Red','0' => 'White'}),p,
+          hidden(-name=>'run',default=>['1']),
+          hidden(-name=>'act',default=>['give-opinion-data']),
+          hidden(-name=>'lat', -id=>'lat', default=>['0']),
+          hidden(-name=>'long', -id=>'long', default=>['0']),
+          submit,
+          end_form;
+        }
+      }
+
+      if ($action eq "give-cs-ind-data") {
+        print h2("Giving Crowd-sourced Individual Geolocations Is Unimplemented");
+      }
 
 #
 # ADD-USER
@@ -530,38 +601,86 @@ sub apply (&@) {                  # takes code block `&` and list `@`
 #
 #
 if ($action eq "add-user") {
-  if (!UserCan($user,"add-users") && !UserCan($user,"manage-users")) {
-    print h2('You do not have the required permissions to add users.');
-    } else {
-      if (!$run) {
-        print start_form(-name=>'AddUser'),
-        h2('Add User'),
-        "Name: ", textfield(-name=>'name'),
-        p,
-        "Email: ", textfield(-name=>'email'),
-        p,
-        "Password: ", textfield(-name=>'password'),
-        p,
-        hidden(-name=>'run',-default=>['1']),
-        hidden(-name=>'act',-default=>['add-user']),
-        submit,
-        end_form,
-        hr;
-        } else {
-          my $name=param('name');
-          my $email=param('email');
-          my $password=param('password');
-          my $error;
-          $error=UserAdd($name,$password,$email,$user);
-          if ($error) {
-           print "Can't add user because: $error";
-           } else {
-             print "Added user $name $email as referred by $user\n";
+  # if (!UserCan($user,"add-users") && !UserCan($user,"manage-users")) {
+
+  #   print h2('You do not have the required permissions to add users.');
+  #   } else {
+    if(defined(param("n"))){
+      my @rows;
+      my $nonce = param("n");
+      eval { @rows = ExecSQL($dbuser, $dbpasswd, "select nonce from rwb_invites WHERE nonce='$nonce'", "COL"); };
+      print @rows;
+        #check to see if the query is successful
+        if (scalar(@rows) == 0){
+          #yell at the user!
+          print h2('You do not have the required permissions to add users.');
+          } else {
+            #delete the link
+            my @return;
+            eval { @return = ExecSQL($dbuser, $dbpasswd, "delete from rwb_invites WHERE nonce='$nonce'", undef); };
+            if (!$run) {
+
+              print start_form(-name=>'AddUser', -action=>'/~jmf716/rwb/rwb.pl?act=add-user'),
+              h2('Add User ref'),
+              "Name: ", textfield(-name=>'name'),
+              p,
+              "Email: ", textfield(-name=>'email'),
+              p,
+              "Password: ", textfield(-name=>'password'),
+              p,
+              hidden(-name=>'run',-default=>['1']),
+              hidden(-name=>'ref',-default=>[param('ref')]),
+              hidden(-name=>'act',-default=>['add-user']),
+              hidden(-name=>'perm',-default=>[param('perm')]),
+              submit,
+              end_form,
+              hr;
+            }
+          }
+          } else {
+            if (!$run) {
+             my @rows;
+             eval { @rows = ExecSQL($dbuser, $dbpasswd, "select action from RWB_PERMISSIONS where name='$user'", "COL"); };
+
+             print start_form(-name=>'AddUser'),
+             h2('Add User'),
+             "Name: ", textfield(-name=>'name'),
+             p,
+             "Email: ", textfield(-name=>'email'),
+             p,
+             "Password: ", textfield(-name=>'password'),
+             p,
+             hidden(-name=>'run',-default=>['1']),
+             hidden(-name=>'act',-default=>['add-user']),
+             hidden(-name=>'ref',-default=>[$user]),
+             popup_menu(-name=>'perm',
+              -multiple=>'true',
+              -values=>[@rows]),p,
+             submit,
+             end_form,
+             hr;
+             } else {
+              my @perms = split(/,/, param('perm'));
+              my $name=param('name');
+              my $email=param('email');
+              my $password=param('password');
+              my $error;
+              my $ref = param('ref');
+              $error=UserAdd($name,$password,$email,$ref);
+              foreach(@perms){
+                GiveUserPerm($name,$_);
+              }
+
+              if ($error) {
+               print "Can't add user because: $error";
+               } else {
+                 print "Added user $name $email as referred by $ref\n";
+               }
+             }
            }
-         }
-       }
-       print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
-     }
+             # }
+             print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+           }
 
      #
      # DELETE-USER
@@ -750,10 +869,12 @@ sub Committees {
   my ($latne,$longne,$latsw,$longsw,$cycle,$format,@sqlized) = @_;
   my @rows;
   eval {
+
     @rows = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, cmte_nm, cmte_pty_affiliation, cmte_st1, cmte_st2, cmte_city, cmte_st, cmte_zip 
                                               from cs339.committee_master 
                                               natural join cs339.cmte_id_to_geo 
                                               where cycle IN (" . join(', ', @sqlized) . ") and latitude>? and latitude<? and longitude>? and longitude<?",undef,$latsw,$latne,$longsw,$longne);
+
   };
 
   if ($@) {
