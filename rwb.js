@@ -17,6 +17,8 @@ $("document").ready(function() {
   var candidates = document.getElementById("candidates");
   var opinions = document.getElementById("opinions");
 
+  var Cycles = document.getElementById("cycles");
+  Cycles.options[2].selected = true;
 
 });
 
