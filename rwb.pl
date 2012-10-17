@@ -500,7 +500,7 @@ if ($debug) {
       "Email: ", textfield(-name=>'email'),p,
       hidden(-name=>'run',default=>['1']),
       hidden(-name=>'act',default=>['invite-user']),h3("select permissions"),
-      popup_menu(-name=>'',
+      popup_menu(-name=>'perms',
         -multiple=>'true',
         -values=>[@rows]
         ),p,
@@ -511,7 +511,7 @@ if ($debug) {
         eval { ExecSQL($dbuser,$dbpasswd,
           "insert into rwb_invites (nonce) values (?)",undef, $random_number);};
 
-        my $permissions = join(',', @rows);
+        my $permissions = join(',', param('perms'));
 
         my $email = param("email");
 
