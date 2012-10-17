@@ -531,9 +531,40 @@ if ($debug) {
           print "You must have an email";
         }
       }
+#
+#
+#
+# give opinion data
+#
+#
+#
+#
+#
+#
+if ($action eq "give-opinion-data") {
+   print "<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js\" type=\"text/javascript\"></script>";
+   print "<script type=\"text/javascript\" src=\"custom.js\"></script>";
 
-      if ($action eq "give-opinion-data") {
-        print h2("Giving Location Opinion Data Is Unimplemented");
+  if(defined(param('color'))){
+    my $color = param('color');
+    my $lat = param('lat');
+    my $long = param('long');
+           eval { ExecSQL($dbuser,$dbpasswd, "insert into rwb_opinions (submitter, color, latitude, longitude) values ('$user', '$color', '$lat', '$long' )",undef);};
+           print "Thanks for submitting your opinion!";
+        }
+        else {
+          print start_form(-name=>'color'),p,p,
+          h2("Select color (political affiliation) for current location"),
+          popup_menu(-name=>'color',
+            -values=>['-1', '1', '0'],
+            -labels=>{'1' => 'Blue','-1' => 'Red','0' => 'White'}),p,
+          hidden(-name=>'run',default=>['1']),
+          hidden(-name=>'act',default=>['give-opinion-data']),
+          hidden(-name=>'lat', -id=>'lat', default=>['0']),
+          hidden(-name=>'long', -id=>'long', default=>['0']),
+          submit,
+          end_form;
+        }
       }
 
       if ($action eq "give-cs-ind-data") {
@@ -567,7 +598,6 @@ if ($action eq "add-user") {
             my @return;
             eval { @return = ExecSQL($dbuser, $dbpasswd, "delete from rwb_invites WHERE nonce='$nonce'", undef); };
             if (!$run) {
-
 
               print start_form(-name=>'AddUser', -action=>'/~jmf716/rwb/rwb.pl?act=add-user'),
               h2('Add User ref'),

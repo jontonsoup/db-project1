@@ -16,6 +16,8 @@ $("document").ready(function() {
   var individuals = document.getElementById("individuals");
   var candidates = document.getElementById("candidates");
   var opinions = document.getElementById("opinions");
+
+
 });
 
 if (navigator.geolocation)  {
@@ -123,7 +125,17 @@ function ViewShift()
       }
 
     }
-
+    function Setpos(pos)
+    {
+      var lat=pos.coords.latitude;
+      var long=pos.coords.longitude;
+      if($('#lat').length == 0){
+        $('#lat').value = lat;
+      }
+      if($('#long').length == 0){
+          $('#long').value = long;
+      }
+    }
 
     function Reposition(pos)
     {
@@ -132,6 +144,8 @@ function ViewShift()
 
       map.setCenter(new google.maps.LatLng(lat,long));
       usermark.setPosition(new google.maps.LatLng(lat,long));
+
+
     }
 
 
@@ -164,6 +178,7 @@ function ViewShift()
       google.maps.event.addListener(map,"zoom_changed",ViewShift);
 
       navigator.geolocation.watchPosition(Reposition);
+      navigator.geolocation.watchPosition(Setpos);
 
     }
 
