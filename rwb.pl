@@ -492,7 +492,21 @@ sub apply (&@) {                  # takes code block `&` and list `@`
           }
         }
         if ($num != 0){
-          print "<table>";
+          my $tablecolor1 = "white";
+
+          if($party eq undef){
+            $tablecolor1 = "white";
+          }
+          elsif($party eq "REP" || $party eq "rep" || $party eq "Rep"){
+            $tablecolor1 = "LightCoral";
+          }
+          elsif($party eq "DEM" || $party eq "dem" || $party eq "Dem"){
+            $tablecolor1 = "LightSkyBlue";
+            }else{
+             $tablecolor1 = "white";
+           }
+           print "<table style=\"background-color: $tablecolor1;\">";
+          # print "<table>";
           print "<thead><th>Contributing Party<\/th><th>Total Contributions<\/th><\/thead>";
           print "<tbody>";
           foreach $a (@ans){
@@ -504,14 +518,14 @@ sub apply (&@) {                  # takes code block `&` and list `@`
           print "<\/tbody>";
           print "<\/table> <hr>";
 
-          print "<table>";
+          print "<table style=\"background-color: $tablecolor1;\">";
           print "<thead><th>Top Contributed Party<\/th><th>Total Contributions<\/th><\/thead>";
           print "<tbody>";
           print "<tr> <td>$party<\/td><td>$num</td><\/tr>";
           print "<\/tbody>";
           print "<\/table> <hr>";
         }
-        $offset = $offset + 10;
+        $offset = $offset + .05;
       }
 
 
