@@ -273,8 +273,8 @@ print "<body style=\"height:100\%;margin:0\">";
 # This tells the web browser to render the page in the style
 # defined in the css file
 #
-print "<style type=\"text/css\">\n\@import \"rwb.css\";\n</style>\n";
-
+# print "<style type=\"text/css\">\n\@import \"rwb.css\";\n</style>\n";
+print "<link href=\"\/\/netdna.bootstrapcdn.com\/twitter-bootstrap\/2.1.1\/css/bootstrap-combined.min.css\" rel=\"stylesheet\">";
 
 print "<center>" if !$debug;
 
@@ -386,27 +386,27 @@ if ($debug) {
   #
   #
   if ($user eq "anon") {
-    print "<p>You are anonymous, but you can also <a href=\"rwb.pl?act=login\">login</a></p>";
+    print "<p>You are anonymous, but you can also <a class=\"btn\"  href=\"rwb.pl?act=login\">login</a></p>";
     } else {
       print "<p>You are logged in as $user and can do the following:</p>";
       if (UserCan($user,"give-opinion-data")) {
-        print "<p><a href=\"rwb.pl?act=give-opinion-data\">Give Opinion Of Current Location</a></p>";
+        print "<p><a class=\"btn\"  href=\"rwb.pl?act=give-opinion-data\">Give Opinion Of Current Location</a></p>";
       }
       if (UserCan($user,"give-cs-ind-data")) {
-        print "<p><a href=\"rwb.pl?act=give-cs-ind-data\">Geolocate Individual Contributors</a></p>";
+        print "<p><a class=\"btn\"  href=\"rwb.pl?act=give-cs-ind-data\">Geolocate Individual Contributors</a></p>";
       }
       if (UserCan($user,"manage-users") || UserCan($user,"invite-users")) {
-        print "<p><a href=\"rwb.pl?act=invite-user\">Invite User</a></p>";
+        print "<p><a class=\"btn\"  href=\"rwb.pl?act=invite-user\">Invite User</a></p>";
       }
       if (UserCan($user,"manage-users") || UserCan($user,"add-users")) {
-        print "<p><a href=\"rwb.pl?act=add-user\">Add User</a></p>";
+        print "<p><a class=\"btn\"  href=\"rwb.pl?act=add-user\">Add User</a></p>";
       }
       if (UserCan($user,"manage-users")) {
-        print "<p><a href=\"rwb.pl?act=delete-user\">Delete User</a></p>";
-        print "<p><a href=\"rwb.pl?act=add-perm-user\">Add User Permission</a></p>";
-        print "<p><a href=\"rwb.pl?act=revoke-perm-user\">Revoke User Permission</a></p>";
+        print "<p><a class=\"btn\"  href=\"rwb.pl?act=delete-user\">Delete User</a></p>";
+        print "<p><a class=\"btn\"  href=\"rwb.pl?act=add-perm-user\">Add User Permission</a></p>";
+        print "<p><a class=\"btn\"  href=\"rwb.pl?act=revoke-perm-user\">Revoke User Permission</a></p>";
       }
-      print "<p><a href=\"rwb.pl?act=logout&run=1\">Logout</a></p>";
+      print "<p><a class=\"btn\"  href=\"rwb.pl?act=logout&run=1\">Logout</a></p>";
     }
 
   }
@@ -518,8 +518,8 @@ sub apply (&@) {                  # takes code block `&` and list `@`
             }else{
              $tablecolor1 = "white";
            }
-           print "<table style=\"background-color: $tablecolor1;\">";
-          # print "<table>";
+           print "<table class=\"table table-striped\" style=\"background-color: $tablecolor1;\">";
+          # print "<table class=\"table table-striped\">";
           print "<thead><th>Contributing Party<\/th><th>Total Contributions<\/th><\/thead>";
           print "<tbody>";
           foreach $a (@ans){
@@ -534,7 +534,7 @@ sub apply (&@) {                  # takes code block `&` and list `@`
           print "<\/tbody>";
           print "<\/table> <hr>";
 
-          print "<table style=\"background-color: $tablecolor1;\">";
+          print "<table class=\"table table-striped\" style=\"background-color: $tablecolor1;\">";
           print "<thead><th>Top Contributed Party<\/th><th>Total Contributions<\/th><\/thead>";
           print "<tbody>";
           print "<tr> <td>$party<\/td><td>$num</td><\/tr>";
@@ -755,7 +755,7 @@ if ($action eq "add-user") {
              }
            }
              # }
-             print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+             print "<p><a class=\"btn\"  href=\"rwb.pl?act=base&run=1\">Return</a></p>";
            }
 
      #
@@ -794,7 +794,7 @@ if ($action eq "add-user") {
                }
              }
            }
-           print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+           print "<p><a class=\"btn\"  href=\"rwb.pl?act=base&run=1\">Return</a></p>";
          }
 
 
@@ -840,7 +840,7 @@ if ($action eq "add-user") {
                  }
                }
              }
-             print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+             print "<p><a class=\"btn\"  href=\"rwb.pl?act=base&run=1\">Return</a></p>";
            }
 
 
@@ -886,7 +886,7 @@ if ($action eq "add-user") {
                    }
                  }
                }
-               print "<p><a href=\"rwb.pl?act=base&run=1\">Return</a></p>";
+               print "<p><a class=\"btn\"  href=\"rwb.pl?act=base&run=1\">Return</a></p>";
              }
 
 
@@ -1224,7 +1224,7 @@ sub ValidUser {
       if ((defined $headerlistref) || ($#list>=0)) {
         # if there is, begin a table
         #
-        $out="<table id=\"$id\" border>";
+        $out="<table class=\"table table-striped\" id=\"$id\" border>";
         #
         # if there is a header list, then output it in bold
         #
