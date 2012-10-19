@@ -482,7 +482,19 @@ sub apply (&@) {                  # takes code block `&` and list `@`
 
          $num = 0;
          my @ans;
-         eval { @ans = ExecSQL($dbuser, $dbpasswd, "select sum(x.money) as Total, x.Party from (SELECT SUM(TRANSACTION_AMNT) as money, CMTE_PTY_AFFILIATION as Party FROM CS339.comm_to_comm NATURAL JOIN CS339.committee_master NATURAL JOIN CS339.CMTE_ID_TO_GEO where latitude>'$latsw1' and latitude<'$latne1' and longitude>'$longsw1' and longitude<'$longne1' and cycle=('$cycle') GROUP BY CMTE_PTY_AFFILIATION UNION SELECT SUM(TRANSACTION_AMNT) as money, CAND_PTY_AFFILIATION as Party FROM CS339.comm_to_cand NATURAL JOIN CS339.candidate_master NATURAL JOIN CS339.cand_id_to_geo where latitude>'$latsw1' and latitude<'$latne1' and longitude>'$longsw1' and longitude<'$longne1' and cycle=('$cycle') GROUP BY CAND_PTY_AFFILIATION) x group by x.Party", undef); };
+         eval { @ans = ExecSQL($dbuser, $dbpasswd, "select sum(x.money) as Total, x.Party from
+                                                        (
+                                                          SELECT SUM(TRANSACTION_AMNT) as money, CMTE_PTY_AFFILIATION as Party FROM CS339.comm_to_comm
+                                                          NATURAL JOIN CS339.committee_master
+                                                          NATURAL JOIN CS339.CMTE_ID_TO_GEO
+                                                          where latitude>'$latsw1' and latitude<'$latne1' and longitude>'$longsw1' and longitude<'$longne1' and cycle IN (" . join(', ', @sqlized) . ")
+                                                          GROUP BY CMTE_PTY_AFFILIATION
+                                                          UNION
+                                                          SELECT SUM(TRANSACTION_AMNT) as money, CAND_PTY_AFFILIATION as Party FROM CS339.comm_to_cand
+                                                          NATURAL JOIN CS339.candidate_master NATURAL JOIN CS339.cand_id_to_geo
+                                                          where latitude>'$latsw1' and latitude<'$latne1' and longitude>'$longsw1' and longitude<'$longne1' and cycle IN (" . join(', ', @sqlized) . ")
+                                                          GROUP BY CAND_PTY_AFFILIATION
+                                                        ) x group by x.Party", undef); };
 
          my $party;
          foreach $a (@ans){
