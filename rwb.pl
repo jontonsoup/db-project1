@@ -483,18 +483,18 @@ sub apply (&@) {                  # takes code block `&` and list `@`
          $num = 0;
          my @ans;
          eval { @ans = ExecSQL($dbuser, $dbpasswd, "select sum(x.money) as Total, x.Party from
-                                                        (
-                                                          SELECT SUM(TRANSACTION_AMNT) as money, CMTE_PTY_AFFILIATION as Party FROM CS339.comm_to_comm
-                                                          NATURAL JOIN CS339.committee_master
-                                                          NATURAL JOIN CS339.CMTE_ID_TO_GEO
-                                                          where latitude>'$latsw1' and latitude<'$latne1' and longitude>'$longsw1' and longitude<'$longne1' and cycle IN (" . join(', ', @sqlized) . ")
-                                                          GROUP BY CMTE_PTY_AFFILIATION
-                                                          UNION
-                                                          SELECT SUM(TRANSACTION_AMNT) as money, CAND_PTY_AFFILIATION as Party FROM CS339.comm_to_cand
-                                                          NATURAL JOIN CS339.candidate_master NATURAL JOIN CS339.cand_id_to_geo
-                                                          where latitude>'$latsw1' and latitude<'$latne1' and longitude>'$longsw1' and longitude<'$longne1' and cycle IN (" . join(', ', @sqlized) . ")
-                                                          GROUP BY CAND_PTY_AFFILIATION
-                                                        ) x group by x.Party", undef); };
+          (
+            SELECT SUM(TRANSACTION_AMNT) as money, CMTE_PTY_AFFILIATION as Party FROM CS339.comm_to_comm
+            NATURAL JOIN CS339.committee_master
+            NATURAL JOIN CS339.CMTE_ID_TO_GEO
+            where latitude>'$latsw1' and latitude<'$latne1' and longitude>'$longsw1' and longitude<'$longne1' and cycle IN (" . join(', ', @sqlized) . ")
+            GROUP BY CMTE_PTY_AFFILIATION
+            UNION
+            SELECT SUM(TRANSACTION_AMNT) as money, CAND_PTY_AFFILIATION as Party FROM CS339.comm_to_cand
+            NATURAL JOIN CS339.candidate_master NATURAL JOIN CS339.cand_id_to_geo
+            where latitude>'$latsw1' and latitude<'$latne1' and longitude>'$longsw1' and longitude<'$longne1' and cycle IN (" . join(', ', @sqlized) . ")
+            GROUP BY CAND_PTY_AFFILIATION
+            ) x group by x.Party", undef); };
 
          my $party;
          foreach $a (@ans){
@@ -508,6 +508,7 @@ sub apply (&@) {                  # takes code block `&` and list `@`
 
           if($party eq undef){
             $tablecolor1 = "white";
+            $party = "Unknown Party";
           }
           elsif($party eq "REP" || $party eq "rep" || $party eq "Rep"){
             $tablecolor1 = "LightCoral";
@@ -524,6 +525,9 @@ sub apply (&@) {                  # takes code block `&` and list `@`
           foreach $a (@ans){
             my $num1 = $a->[0];
             my $party1 = $a->[1];
+            if($party1 eq undef){
+              $party1 = "Unknown Party";
+            }
             print "<tr> <td>$party1<\/td><td>$num1<\/td><\/tr>";
           }
 
