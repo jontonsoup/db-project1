@@ -518,11 +518,11 @@ sub apply (&@) {                  # takes code block `&` and list `@`
             }else{
              $tablecolor1 = "white";
            }
+           print h1("Committee Data");
            print "<table class=\"table table-striped\" style=\"background-color: $tablecolor1;\">";
-          # print "<table class=\"table table-striped\">";
-          print "<thead><th>Contributing Party<\/th><th>Total Contributions<\/th><\/thead>";
-          print "<tbody>";
-          foreach $a (@ans){
+           print "<thead><th>Contributing Party<\/th><th>Total Contributions<\/th><\/thead>";
+           print "<tbody>";
+           foreach $a (@ans){
             my $num1 = $a->[0];
             my $party1 = $a->[1];
             if($party1 eq undef){
@@ -566,68 +566,140 @@ sub apply (&@) {                  # takes code block `&` and list `@`
      }
      if ($what{individuals}) {
       my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycle,$format,@sqlized);
-      if (!$error) {
-        if ($format eq "table") {
-         print "<h2>Nearby individuals</h2>$str";
-         } else {
-           print $str;
+      my $num = 0;
+      my $offset = 0;
+
+      while($num == 0){
+       my $latne1 = $latne + $offset;
+       my $longne1 = $longne + $offset;
+       my $latsw1 = $latsw - $offset;
+       my $longsw1 = $longsw - $offset;
+
+
+       $num = 0;
+       my @ans;
+       eval { @ans = ExecSQL($dbuser, $dbpasswd, "select sum(x.money) as Total, x.Party from
+        (
+          SELECT SUM(TRANSACTION_AMNT) as money, CMTE_PTY_AFFILIATION as Party FROM CS339.individual
+          NATURAL JOIN CS339.committee_master
+          NATURAL JOIN CS339.ind_to_geo
+          where latitude>'$latsw1' and latitude<'$latne1' and longitude>'$longsw1' and longitude<'$longne1' and cycle IN (" . join(', ', @sqlized) . ")
+          GROUP BY CMTE_PTY_AFFILIATION
+          ) x group by x.Party", undef); };
+
+       my $party;
+       foreach $a (@ans){
+        if($num < $a->[0]){
+          $num = $a->[0];
+          $party = $a->[1];
+        }
+      }
+      if ($num != 0){
+        my $tablecolor1 = "white";
+
+        if($party eq undef){
+          $tablecolor1 = "white";
+          $party = "Unknown Party";
+        }
+        elsif($party eq "REP" || $party eq "rep" || $party eq "Rep"){
+          $tablecolor1 = "LightCoral";
+        }
+        elsif($party eq "DEM" || $party eq "dem" || $party eq "Dem"){
+          $tablecolor1 = "LightSkyBlue";
+          }else{
+           $tablecolor1 = "white";
          }
-       }
-     }
-     if ($what{opinions}) {
-      my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycle,$format,@sqlized);
-      if (!$error) {
-        if ($format eq "table") {
-         print "<h2>Nearby opinions</h2>$str";
-         } else {
-           print $str;
-         }
+         print h1("Individual Data"), br;
+         print "<table class=\"table table-striped\" style=\"background-color: $tablecolor1;\">";
+         print "<thead><th>Contributing Party<\/th><th>Total Contributions<\/th><\/thead>";
+         print "<tbody>";
+         foreach $a (@ans){
+          my $num1 = $a->[0];
+          my $party1 = $a->[1];
+          if($party1 eq undef){
+            $party1 = "Unknown Party";
+          }
+          print "<tr> <td>$party1<\/td><td>$num1<\/td><\/tr>";
+        }
+
+        print "<\/tbody>";
+        print "<\/table> <hr>";
+
+        print "<table class=\"table table-striped\" style=\"background-color: $tablecolor1;\">";
+        print "<thead><th>Top Contributed Party<\/th><th>Total Contributions<\/th><\/thead>";
+        print "<tbody>";
+        print "<tr> <td>$party<\/td><td>$num</td><\/tr>";
+        print "<\/tbody>";
+        print "<\/table> <hr>";
+      }
+      $offset = $offset + .05;
+    }
+
+
+
+
+    if (!$error) {
+      if ($format eq "table") {
+       print "<h2>Nearby individuals</h2>$str";
+       } else {
+         print $str;
        }
      }
    }
+   if ($what{opinions}) {
+    my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycle,$format,@sqlized);
+    if (!$error) {
+      if ($format eq "table") {
+       print "<h2>Nearby opinions</h2>$str";
+       } else {
+         print $str;
+       }
+     }
+   }
+ }
 
-   if ($action eq "invite-user") {
-    print "Invite User";
+ if ($action eq "invite-user") {
+  print "Invite User";
 
 
-    my @rows;
-    eval { @rows = ExecSQL($dbuser, $dbpasswd, "select action from RWB_PERMISSIONS where name='$user'", "COL"); };
+  my @rows;
+  eval { @rows = ExecSQL($dbuser, $dbpasswd, "select action from RWB_PERMISSIONS where name='$user'", "COL"); };
 
-    print start_form(-name=>'invite'),p,p,
-    "Email: ", textfield(-name=>'email'),p,
-    hidden(-name=>'run',default=>['1']),
-    hidden(-name=>'act',default=>['invite-user']),h3("select permissions"),
-    popup_menu(-name=>'perms',
-      -multiple=>'true',
-      -values=>[@rows]
-      ),p,
-    submit,
-    end_form;
-    if (defined(param("email"))) {
-      my $random_number = rand();
-      eval { ExecSQL($dbuser,$dbpasswd,
-        "insert into rwb_invites (nonce) values (?)",undef, $random_number);};
+  print start_form(-name=>'invite'),p,p,
+  "Email: ", textfield(-name=>'email'),p,
+  hidden(-name=>'run',default=>['1']),
+  hidden(-name=>'act',default=>['invite-user']),h3("select permissions"),
+  popup_menu(-name=>'perms',
+    -multiple=>'true',
+    -values=>[@rows]
+    ),p,
+  submit,
+  end_form;
+  if (defined(param("email"))) {
+    my $random_number = rand();
+    eval { ExecSQL($dbuser,$dbpasswd,
+      "insert into rwb_invites (nonce) values (?)",undef, $random_number);};
 
-      my $permissions = join(',', param('perms'));
+    my $permissions = join(',', param('perms'));
 
-      my $email = param("email");
+    my $email = param("email");
 
-      use Net::SMTP;
-      my $smtp = Net::SMTP->new('localhost');
+    use Net::SMTP;
+    my $smtp = Net::SMTP->new('localhost');
 
-      $smtp->mail($ENV{USER});
-      $smtp->to($email);
+    $smtp->mail($ENV{USER});
+    $smtp->to($email);
 
-      $smtp->data();
-      $smtp->datasend("To: " . $email . "\n");
-      $smtp->datasend("\n");
-      $smtp->datasend("http://". $ENV{'HTTP_HOST'} ."/~jmf716/rwb/rwb.pl?act=add-user&n=$random_number&ref=$user&perm=$permissions");
-      $smtp->dataend();
-      print $email . " has been sent an email request";
-      } else{
-        print "You must have an email";
-      }
+    $smtp->data();
+    $smtp->datasend("To: " . $email . "\n");
+    $smtp->datasend("\n");
+    $smtp->datasend("http://". $ENV{'HTTP_HOST'} ."/~jmf716/rwb/rwb.pl?act=add-user&n=$random_number&ref=$user&perm=$permissions");
+    $smtp->dataend();
+    print $email . " has been sent an email request";
+    } else{
+      print "You must have an email";
     }
+  }
 #
 #
 #
