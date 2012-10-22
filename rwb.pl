@@ -720,6 +720,7 @@ if ($action eq "give-opinion-data") {
   my $long = param('long');
   eval { ExecSQL($dbuser,$dbpasswd, "insert into rwb_opinions (submitter, color, latitude, longitude) values ('$user', '$color', '$lat', '$long' )",undef);};
   print "Thanks for submitting your opinion!";
+  print "<p><a class=\"btn\"  href=\"rwb.pl?act=base&run=1\">Return</a></p>";
 }
 else {
   print start_form(-name=>'color'),p,p,
