@@ -360,7 +360,7 @@ if ($action eq "base") {
     -id=>'cycles',
     -multiple=>'true',
     -values=>[@rows],
-    -default=>'1010'),p,
+    -default=>[@rows]),p,
   end_form;
 
 #
@@ -472,8 +472,13 @@ sub apply (&@) {                  # takes code block `&` and list `@`
         my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycle,$format,@sqlized);
         my $num = 0;
         my $offset = 0;
-
+        my $count = 0;
         while($num == 0){
+          $count = $count + 1;
+          if($count >= 5){
+            print "We searched 5 times for comittee data, but found nothing!<br>";
+            last;
+          }
          my $latne1 = $latne + $offset;
          my $longne1 = $longne + $offset;
          my $latsw1 = $latsw - $offset;
@@ -489,7 +494,7 @@ sub apply (&@) {                  # takes code block `&` and list `@`
             NATURAL JOIN CS339.CMTE_ID_TO_GEO
             where latitude>'$latsw1' and latitude<'$latne1' and longitude>'$longsw1' and longitude<'$longne1' and cycle IN (" . join(', ', @sqlized) . ")
             GROUP BY CMTE_PTY_AFFILIATION
-            UNION
+            UNION ALL
             SELECT SUM(TRANSACTION_AMNT) as money, CAND_PTY_AFFILIATION as Party FROM CS339.comm_to_cand
             NATURAL JOIN CS339.candidate_master NATURAL JOIN CS339.cand_id_to_geo
             where latitude>'$latsw1' and latitude<'$latne1' and longitude>'$longsw1' and longitude<'$longne1' and cycle IN (" . join(', ', @sqlized) . ")
@@ -541,7 +546,7 @@ sub apply (&@) {                  # takes code block `&` and list `@`
           print "<\/tbody>";
           print "<\/table> <hr>";
         }
-        $offset = $offset + .05;
+        $offset = $offset + 5;
       }
 
 
@@ -568,13 +573,18 @@ sub apply (&@) {                  # takes code block `&` and list `@`
       my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycle,$format,@sqlized);
       my $num = 0;
       my $offset = 0;
+      my $count = 0;
 
       while($num == 0){
        my $latne1 = $latne + $offset;
        my $longne1 = $longne + $offset;
        my $latsw1 = $latsw - $offset;
        my $longsw1 = $longsw - $offset;
-
+        $count = $count + 1;
+          if($count >= 5){
+            print "We searched 5 times for comittee data, but found nothing!<br>";
+            last;
+          }
 
        $num = 0;
        my @ans;
@@ -660,47 +670,48 @@ sub apply (&@) {                  # takes code block `&` and list `@`
        
        $num=0;
        my @ans;
-       eval(@ans = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, avg(color)
+       eval(@ans = ExecSQL($dbuser, $dbpasswd, "select avg(color)
           from rwb_opinions
           where latitude>? and latitude<? and longitude>? and longitude<?
-          UNION
-          select latitude, longitude, stddev(color)
+          UNION ALL
+          select stddev(color)
           from rwb_opinions
           where latitude>? and latitude<? and longitude>? and longitude<?
           ",undef,$latsw,$latne,$longsw,$longne,$latsw,$latne,$longsw,$longne));
 
         # print @ans->[0];
         # print "THIS IS OPINIONS";
-        # foreach $a (@ans){
-        #   if($num < $a->[0]){
-        #     $num = $a->[0];
-        #   }
-        # }
+        
+        foreach $a (@ans){
+          if($num < $a->[0]){
+            $num = $a->[0];
+          }
+        }
     # # }
 
     
 
-    # if ($num != 0) {
-    #   my $tablecolor = 0;
-    #   my $avg;
-    #   my $stddev;
-    #   if ($ans->[0] > 0){
-    #     $tablecolor = "blue";
-    #     $avg = $ans->[0];
-    #   } elsif ($ans->[1] < 0) {
-    #     $tablecolor = "red";
-    #     $stddev = $ans->[1];
-    #   }
-    #   print h1("Opinions Data");
-    #        print "<table class=\"table table-striped\" style=\"background-color: $tablecolor;\">";
-    #        print "<thead><th>Contributing Party<\/th><th>Total Contributions<\/th><\/thead>";
-    #        print "<tbody>";
-    #       print "<tr> <td>Average<\/td><td>".@ans->[0]."<\/td><\/tr>";
-    #       print "<tr> <td>StdDev<\/td><td>".@ans->[1]."<\/td><\/tr>";
+    if ($num != 0) {
+      my $tablecolor = 0;
+      my $avg; my $stddev;
+      
+      if (@ans[0]->[0] > 0){
+        $tablecolor = "LightSkyBlue";
+      } elsif (@ans[0]->[0] < 0) {
+        $tablecolor = "LightCoral";
+      } else {
+        $tablecolor = "White";
+      }
+      print h1("Opinions Data");
+          print "<table class=\"table table-striped\" style=\"background-color: $tablecolor;\">";
+          print "<thead><th>Contributing Party<\/th><th>Total Contributions<\/th><\/thead>";
+          print "<tbody>";
+          print "<tr> <td>Average<\/td><td>". @ans[0]->[0] ."<\/td><\/tr>";
+          print "<tr> <td>StdDev<\/td><td>". @ans[1]->[0] ."<\/td><\/tr>";
 
-    #       print "<\/tbody>";
-    #       print "<\/table> <hr>";
-    # }
+          print "<\/tbody>";
+          print "<\/table> <hr>";
+    }
 
     if (!$error) {
       if ($format eq "table") {
