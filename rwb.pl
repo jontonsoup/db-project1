@@ -323,8 +323,8 @@ if ($action eq "base") {
   #
   # Google maps API, needed to draw the map
   #
-  print "<script src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js\" type=\"text/javascript\"></script>";
-  print "<script src=\"http://maps.google.com/maps/api/js?sensor=false\" type=\"text/javascript\"></script>";
+  print "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js\" type=\"text/javascript\"></script>";
+  print "<script src=\"https://maps.google.com/maps/api/js?sensor=false\" type=\"text/javascript\"></script>";
 
   #
   # The Javascript portion of our app
