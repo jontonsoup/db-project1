@@ -129,7 +129,7 @@ function ViewShift()
         var query_string = "rwb.pl?act=near&latne="+ne.lat()+"&longne="+ne.lng()+"&latsw="+sw.lat()+"&longsw="+sw.lng();
         query_string = query_string +  "&cycle=" + selected_cycles_param;
         query_string = query_string + "&format=raw&what=all";
-        
+
         $.get(query_string, NewData);
 
       }
@@ -152,7 +152,6 @@ function ViewShift()
         var query_string = "rwb.pl?act=near&latne="+ne.lat()+"&longne="+ne.lng()+"&latsw="+sw.lat()+"&longsw="+sw.lng();
         query_string += "&cycle=" + selected_cycles_param;
         query_string += "&format=raw&what=" + what_sting;
-        alert(query_string);
         $.get(query_string, NewData);
       }
 
