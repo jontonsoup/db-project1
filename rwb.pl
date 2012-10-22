@@ -648,6 +648,60 @@ sub apply (&@) {                  # takes code block `&` and list `@`
    }
    if ($what{opinions}) {
     my ($str,$error) = Opinions($latne,$longne,$latsw,$longsw,$cycle,$format,@sqlized);
+    my $num = 0;
+    my $offset = 0;
+
+
+    # # while($num == 0){
+       # my $latne1 = $latne + $offset;
+       # my $longne1 = $longne + $offset;
+       # my $latsw1 = $latsw - $offset;
+       # my $longsw1 = $longsw - $offset;
+       
+       $num=0;
+       my @ans;
+       eval(@ans = ExecSQL($dbuser, $dbpasswd, "select latitude, longitude, avg(color)
+          from rwb_opinions
+          where latitude>? and latitude<? and longitude>? and longitude<?
+          UNION
+          select latitude, longitude, stddev(color)
+          from rwb_opinions
+          where latitude>? and latitude<? and longitude>? and longitude<?
+          ",undef,$latsw,$latne,$longsw,$longne,$latsw,$latne,$longsw,$longne));
+
+        # print @ans->[0];
+        # print "THIS IS OPINIONS";
+        # foreach $a (@ans){
+        #   if($num < $a->[0]){
+        #     $num = $a->[0];
+        #   }
+        # }
+    # # }
+
+    
+
+    # if ($num != 0) {
+    #   my $tablecolor = 0;
+    #   my $avg;
+    #   my $stddev;
+    #   if ($ans->[0] > 0){
+    #     $tablecolor = "blue";
+    #     $avg = $ans->[0];
+    #   } elsif ($ans->[1] < 0) {
+    #     $tablecolor = "red";
+    #     $stddev = $ans->[1];
+    #   }
+    #   print h1("Opinions Data");
+    #        print "<table class=\"table table-striped\" style=\"background-color: $tablecolor;\">";
+    #        print "<thead><th>Contributing Party<\/th><th>Total Contributions<\/th><\/thead>";
+    #        print "<tbody>";
+    #       print "<tr> <td>Average<\/td><td>".@ans->[0]."<\/td><\/tr>";
+    #       print "<tr> <td>StdDev<\/td><td>".@ans->[1]."<\/td><\/tr>";
+
+    #       print "<\/tbody>";
+    #       print "<\/table> <hr>";
+    # }
+
     if (!$error) {
       if ($format eq "table") {
        print "<h2>Nearby opinions</h2>$str";
