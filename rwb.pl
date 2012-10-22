@@ -360,7 +360,7 @@ if ($action eq "base") {
     -id=>'cycles',
     -multiple=>'true',
     -values=>[@rows],
-    -default=>'1010'),p,
+    -default=>[@rows]),p,
   end_form;
 
 #
@@ -472,8 +472,13 @@ sub apply (&@) {                  # takes code block `&` and list `@`
         my ($str,$error) = Committees($latne,$longne,$latsw,$longsw,$cycle,$format,@sqlized);
         my $num = 0;
         my $offset = 0;
-
+        my $count = 0;
         while($num == 0){
+          $count = $count + 1;
+          if($count >= 5){
+            print "We searched 5 times for comittee data, but found nothing!<br>";
+            last;
+          }
          my $latne1 = $latne + $offset;
          my $longne1 = $longne + $offset;
          my $latsw1 = $latsw - $offset;
@@ -541,7 +546,7 @@ sub apply (&@) {                  # takes code block `&` and list `@`
           print "<\/tbody>";
           print "<\/table> <hr>";
         }
-        $offset = $offset + .05;
+        $offset = $offset + 5;
       }
 
 
@@ -568,13 +573,18 @@ sub apply (&@) {                  # takes code block `&` and list `@`
       my ($str,$error) = Individuals($latne,$longne,$latsw,$longsw,$cycle,$format,@sqlized);
       my $num = 0;
       my $offset = 0;
+      my $count = 0;
 
       while($num == 0){
        my $latne1 = $latne + $offset;
        my $longne1 = $longne + $offset;
        my $latsw1 = $latsw - $offset;
        my $longsw1 = $longsw - $offset;
-
+        $count = $count + 1;
+          if($count >= 5){
+            print "We searched 5 times for comittee data, but found nothing!<br>";
+            last;
+          }
 
        $num = 0;
        my @ans;
