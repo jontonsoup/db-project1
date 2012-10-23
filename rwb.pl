@@ -704,7 +704,7 @@ sub apply (&@) {                  # takes code block `&` and list `@`
       }
       print h1("Opinions Data");
           print "<table class=\"table table-striped\" style=\"background-color: $tablecolor;\">";
-          print "<thead><th>Contributing Party<\/th><th>Total Contributions<\/th><\/thead>";
+          print "<thead><th>Statistic<\/th><th>Value<\/th><\/thead>";
           print "<tbody>";
           print "<tr> <td>Average<\/td><td>". @ans[0]->[0] ."<\/td><\/tr>";
           print "<tr> <td>StdDev<\/td><td>". @ans[1]->[0] ."<\/td><\/tr>";
